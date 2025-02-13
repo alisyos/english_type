@@ -37,7 +37,27 @@ class EnglishExamAnalyzer:
             message = self.client.beta.threads.messages.create(
                 thread_id=thread.id,
                 role="user",
-                content=exam_text  # 시험지 내용만 전송
+                content=f"""다음 영어 시험지를 분석하여 JSON 형식으로 응답해주세요:
+
+{exam_text}
+
+다음 형식으로 응답해주세요:
+{{
+    "school_name": "학교명",
+    "grade": "학년",
+    "exam_type": "시험 종류",
+    "total_questions": 전체 문제 수,
+    "question_types": {{
+        "내용 이해": {{
+            "count": 문제 수,
+            "numbers": [해당하는 문제 번호들]
+        }},
+        ... (다른 유형들도 동일한 형식으로)
+    }},
+    "highest_difficulty_vocab": ["가장 어려운 어휘 3개"]
+}}
+
+반드시 JSON 형식으로만 응답해주세요."""
             )
             logger.info(f"메시지 전송됨: {message.id}")
             
