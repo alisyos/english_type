@@ -5,6 +5,8 @@ import json
 import re
 import time
 import logging
+import os
+import tiktoken
 
 # 로깅 설정
 logging.basicConfig(level=logging.DEBUG)
@@ -12,7 +14,12 @@ logger = logging.getLogger(__name__)
 
 class EnglishExamAnalyzer:
     def __init__(self, api_key: str):
-        self.client = OpenAI(api_key=api_key)
+        # OpenAI 클라이언트 초기화 방식 변경
+        self.client = OpenAI(
+            api_key=api_key,
+            default_headers={"Content-Type": "application/json"}
+        )
+        self.encoding = tiktoken.get_encoding("cl100k_base")
         # 영어 시험지 분석 Assistant
         self.assistant_id = "asst_pjkcpLPv9Soy3KdaiEKle221"
         logger.info("EnglishExamAnalyzer 초기화됨")
@@ -159,9 +166,14 @@ class EnglishExamAnalyzer:
         
     def extract_text_from_pdf(self, pdf_path: str) -> str:
         """PDF 파일에서 텍스트를 추출합니다."""
-        text = ""
-        with open(pdf_path, 'rb') as file:
-            pdf_reader = PyPDF2.PdfReader(file)
+        try:
+            pdf_reader = PyPDF2.PdfReader(pdf_path)
+            text = ""
             for page in pdf_reader.pages:
                 text += page.extract_text()
-        return text 
+            return text
+        except Exception as e:
+            raise Exception(f"PDF 파일 읽기 오류: {str(e)}")
+
+    def count_tokens(self, text):
+        return len(self.encoding.encode(text)) 
