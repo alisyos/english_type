@@ -1,12 +1,12 @@
 import PyPDF2
-from openai import OpenAI
+import openai
 from typing import Dict, Any
 import json
 import re
 
 class EnglishExamAnalyzer:
     def __init__(self, api_key: str):
-        self.client = OpenAI(api_key=api_key)
+        openai.api_key = api_key
         self.assistant_id = "asst_pjkcpLPv9Soy3KdaiEKle221"
         
     def count_characters(self, text: str) -> int:
@@ -33,24 +33,24 @@ class EnglishExamAnalyzer:
         total_characters = self.count_characters(exam_text)
         
         # 새로운 Thread 생성
-        thread = self.client.beta.threads.create()
+        thread = openai.Thread.create()
         
         # 메시지 추가
-        message = self.client.beta.threads.messages.create(
+        message = openai.ThreadMessage.create(
             thread_id=thread.id,
             role="user",
             content=exam_text
         )
         
         # Assistant를 사용하여 실행
-        run = self.client.beta.threads.runs.create(
+        run = openai.ThreadRun.create(
             thread_id=thread.id,
             assistant_id=self.assistant_id
         )
         
         # 실행 완료 대기
         while True:
-            run = self.client.beta.threads.runs.retrieve(
+            run = openai.ThreadRun.retrieve(
                 thread_id=thread.id,
                 run_id=run.id
             )
@@ -58,7 +58,7 @@ class EnglishExamAnalyzer:
                 break
         
         # 응답 가져오기
-        messages = self.client.beta.threads.messages.list(
+        messages = openai.ThreadMessage.list(
             thread_id=thread.id
         )
         
