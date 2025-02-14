@@ -6,4 +6,6 @@ threads = 2    # 스레드 수 감소
 max_requests = 500
 max_requests_jitter = 50
 worker_tmp_dir = '/tmp'  # 임시 디렉토리 명시
-preload_app = True      # 앱 미리 로드 
+preload_app = True      # 앱 미리 로드
+keepalive = 65
+worker_connections = 100 
