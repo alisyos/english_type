@@ -51,17 +51,41 @@ class EnglishExamAnalyzer:
 다음 형식으로 응답해주세요:
 {{
     "school_name": "학교명",
+    "publisher": "출판사명",
     "grade": "학년",
     "exam_type": "시험 종류",
     "total_questions": 전체 문제 수,
     "question_types": {{
-        "내용 이해": {{
-            "count": 문제 수,
-            "numbers": [해당하는 문제 번호들]
-        }},
-        ... (다른 유형들도 동일한 형식으로)
+        "빈칸추론": {{"count": 0, "numbers": []}},
+        "주제추론": {{"count": 0, "numbers": []}},
+        "제목추론": {{"count": 0, "numbers": []}},
+        "요지추론": {{"count": 0, "numbers": []}},
+        "필자주장": {{"count": 0, "numbers": []}},
+        "밑줄어휘": {{"count": 0, "numbers": []}},
+        "밑줄어법": {{"count": 0, "numbers": []}},
+        "문단요약": {{"count": 0, "numbers": []}},
+        "순서배열": {{"count": 0, "numbers": []}},
+        "문장삽입": {{"count": 0, "numbers": []}},
+        "문장삭제": {{"count": 0, "numbers": []}},
+        "영영풀이": {{"count": 0, "numbers": []}},
+        "지문내용": {{"count": 0, "numbers": []}},
+        "분위기/심경": {{"count": 0, "numbers": []}},
+        "목적": {{"count": 0, "numbers": []}},
+        "부적절한": {{"count": 0, "numbers": []}},
+        "알 수 없는 정보": {{"count": 0, "numbers": []}},
+        "답할 수 없는 질문": {{"count": 0, "numbers": []}}
     }},
-    "highest_difficulty_vocab": ["가장 어려운 어휘 3개"]
+    "question_format": {{
+        "multiple_choice": {{"count": 0, "numbers": []}},
+        "subjective": {{"count": 0, "numbers": []}}
+    }},
+    "question_scope": {{
+        "범위_교과서": {{"chapters": [], "count": 0, "numbers": []}},
+        "범위_모의고사": {{"chapters": [], "count": 0, "numbers": []}},
+        "범위_부교재": {{"chapters": [], "count": 0, "numbers": []}}
+    }},
+    "total_characters": 0,
+    "highest_difficulty_vocab": []
 }}
 
 반드시 JSON 형식으로만 응답해주세요."""
@@ -123,41 +147,85 @@ class EnglishExamAnalyzer:
                 logger.error(f"JSON 파싱 실패: {str(e)}")
                 return {
                     'school_name': '',
+                    'publisher': '',
                     'grade': '',
                     'exam_type': '',
                     'total_questions': 0,
                     'question_types': {
-                        '내용 이해': {'count': 0, 'numbers': []},
-                        '추론': {'count': 0, 'numbers': []},
-                        '함의': {'count': 0, 'numbers': []},
-                        '주제 파악': {'count': 0, 'numbers': []},
-                        '제목 선택': {'count': 0, 'numbers': []},
-                        '요지 파악': {'count': 0, 'numbers': []},
-                        '필자 주장': {'count': 0, 'numbers': []},
-                        '문단 요약': {'count': 0, 'numbers': []},
-                        '분위기/심경 파악': {'count': 0, 'numbers': []},
-                        '목적 파악': {'count': 0, 'numbers': []},
-                        '빈칸 추론': {'count': 0, 'numbers': []},
-                        '연결어 선택': {'count': 0, 'numbers': []},
-                        '문장 순서 배열': {'count': 0, 'numbers': []},
-                        '문장 삽입': {'count': 0, 'numbers': []},
-                        '문장 삭제': {'count': 0, 'numbers': []},
-                        '어휘 문제': {'count': 0, 'numbers': []},
-                        '어법 문제': {'count': 0, 'numbers': []},
-                        '문장 완성': {'count': 0, 'numbers': []},
-                        '영작': {'count': 0, 'numbers': []},
-                        '진위 판별': {'count': 0, 'numbers': []},
+                        '빈칸추론': {'count': 0, 'numbers': []},
+                        '주제추론': {'count': 0, 'numbers': []},
+                        '제목추론': {'count': 0, 'numbers': []},
+                        '요지추론': {'count': 0, 'numbers': []},
+                        '필자주장': {'count': 0, 'numbers': []},
+                        '밑줄어휘': {'count': 0, 'numbers': []},
+                        '밑줄어법': {'count': 0, 'numbers': []},
+                        '문단요약': {'count': 0, 'numbers': []},
+                        '순서배열': {'count': 0, 'numbers': []},
+                        '문장삽입': {'count': 0, 'numbers': []},
+                        '문장삭제': {'count': 0, 'numbers': []},
                         '영영풀이': {'count': 0, 'numbers': []},
-                        '불일치 고쳐 쓰기': {'count': 0, 'numbers': []}
+                        '지문내용': {'count': 0, 'numbers': []},
+                        '분위기/심경': {'count': 0, 'numbers': []},
+                        '목적': {'count': 0, 'numbers': []},
+                        '부적절한': {'count': 0, 'numbers': []},
+                        '알 수 없는 정보': {'count': 0, 'numbers': []},
+                        '답할 수 없는 질문': {'count': 0, 'numbers': []}
                     },
-                    'highest_difficulty_vocab': [],
+                    'question_format': {
+                        'multiple_choice': {'count': 0, 'numbers': []},
+                        'subjective': {'count': 0, 'numbers': []}
+                    },
+                    'question_scope': {
+                        '범위_교과서': {'chapters': [], 'count': 0, 'numbers': []},
+                        '범위_모의고사': {'chapters': [], 'count': 0, 'numbers': []},
+                        '범위_부교재': {'chapters': [], 'count': 0, 'numbers': []}
+                    },
                     'total_characters': total_characters,
+                    'highest_difficulty_vocab': [],
                     'error': f'응답 파싱 실패: {str(e)}'
                 }
                 
         except Exception as e:
             logger.error(f"분석 중 오류 발생: {str(e)}")
-            return {'error': f'분석 중 오류 발생: {str(e)}'}
+            return {
+                'school_name': '',
+                'publisher': '',
+                'grade': '',
+                'exam_type': '',
+                'total_questions': 0,
+                'question_types': {
+                    '빈칸추론': {'count': 0, 'numbers': []},
+                    '주제추론': {'count': 0, 'numbers': []},
+                    '제목추론': {'count': 0, 'numbers': []},
+                    '요지추론': {'count': 0, 'numbers': []},
+                    '필자주장': {'count': 0, 'numbers': []},
+                    '밑줄어휘': {'count': 0, 'numbers': []},
+                    '밑줄어법': {'count': 0, 'numbers': []},
+                    '문단요약': {'count': 0, 'numbers': []},
+                    '순서배열': {'count': 0, 'numbers': []},
+                    '문장삽입': {'count': 0, 'numbers': []},
+                    '문장삭제': {'count': 0, 'numbers': []},
+                    '영영풀이': {'count': 0, 'numbers': []},
+                    '지문내용': {'count': 0, 'numbers': []},
+                    '분위기/심경': {'count': 0, 'numbers': []},
+                    '목적': {'count': 0, 'numbers': []},
+                    '부적절한': {'count': 0, 'numbers': []},
+                    '알 수 없는 정보': {'count': 0, 'numbers': []},
+                    '답할 수 없는 질문': {'count': 0, 'numbers': []}
+                },
+                'question_format': {
+                    'multiple_choice': {'count': 0, 'numbers': []},
+                    'subjective': {'count': 0, 'numbers': []}
+                },
+                'question_scope': {
+                    '범위_교과서': {'chapters': [], 'count': 0, 'numbers': []},
+                    '범위_모의고사': {'chapters': [], 'count': 0, 'numbers': []},
+                    '범위_부교재': {'chapters': [], 'count': 0, 'numbers': []}
+                },
+                'total_characters': total_characters,
+                'highest_difficulty_vocab': [],
+                'error': f'분석 중 오류 발생: {str(e)}'
+            }
 
     def count_characters(self, text: str) -> int:
         """영어 텍스트의 글자 수를 계산합니다 (공백 제외)"""

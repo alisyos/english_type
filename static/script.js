@@ -145,6 +145,7 @@ document.addEventListener('DOMContentLoaded', function() {
                     }
 
                     const data = await response.json();
+                    console.log('GPT 응답 전체 데이터:', data); // 전체 응답 데이터 출력
                     
                     if (data.error) {
                         updateFileStatus(file.name, 'error', data.error);
@@ -175,31 +176,33 @@ function addResultToTable(data) {
     
     row.innerHTML = `
         <td>${data.school_name || ''}</td>
+        <td>${data.publisher || ''}</td>
         <td>${data.grade || ''}</td>
         <td>${data.exam_type || ''}</td>
         <td>${data.total_questions || 0}</td>
-        <td>${getQuestionInfo(data.question_types, '내용 이해')}</td>
-        <td>${getQuestionInfo(data.question_types, '추론')}</td>
-        <td>${getQuestionInfo(data.question_types, '함의')}</td>
-        <td>${getQuestionInfo(data.question_types, '주제 파악')}</td>
-        <td>${getQuestionInfo(data.question_types, '제목 선택')}</td>
-        <td>${getQuestionInfo(data.question_types, '요지 파악')}</td>
-        <td>${getQuestionInfo(data.question_types, '필자 주장')}</td>
-        <td>${getQuestionInfo(data.question_types, '문단 요약')}</td>
-        <td>${getQuestionInfo(data.question_types, '분위기/심경 파악')}</td>
-        <td>${getQuestionInfo(data.question_types, '목적 파악')}</td>
-        <td>${getQuestionInfo(data.question_types, '빈칸 추론')}</td>
-        <td>${getQuestionInfo(data.question_types, '연결어 선택')}</td>
-        <td>${getQuestionInfo(data.question_types, '문장 순서 배열')}</td>
-        <td>${getQuestionInfo(data.question_types, '문장 삽입')}</td>
-        <td>${getQuestionInfo(data.question_types, '문장 삭제')}</td>
-        <td>${getQuestionInfo(data.question_types, '어휘 문제')}</td>
-        <td>${getQuestionInfo(data.question_types, '어법 문제')}</td>
-        <td>${getQuestionInfo(data.question_types, '문장 완성')}</td>
-        <td>${getQuestionInfo(data.question_types, '영작')}</td>
-        <td>${getQuestionInfo(data.question_types, '진위 판별')}</td>
+        <td>${getQuestionInfo(data.question_types, '빈칸추론')}</td>
+        <td>${getQuestionInfo(data.question_types, '주제추론')}</td>
+        <td>${getQuestionInfo(data.question_types, '제목추론')}</td>
+        <td>${getQuestionInfo(data.question_types, '요지추론')}</td>
+        <td>${getQuestionInfo(data.question_types, '필자주장')}</td>
+        <td>${getQuestionInfo(data.question_types, '밑줄어휘')}</td>
+        <td>${getQuestionInfo(data.question_types, '밑줄어법')}</td>
+        <td>${getQuestionInfo(data.question_types, '문단요약')}</td>
+        <td>${getQuestionInfo(data.question_types, '순서배열')}</td>
+        <td>${getQuestionInfo(data.question_types, '문장삽입')}</td>
+        <td>${getQuestionInfo(data.question_types, '문장삭제')}</td>
         <td>${getQuestionInfo(data.question_types, '영영풀이')}</td>
-        <td>${getQuestionInfo(data.question_types, '불일치')}</td>
+        <td>${getQuestionInfo(data.question_types, '지문내용')}</td>
+        <td>${getQuestionInfo(data.question_types, '분위기/심경')}</td>
+        <td>${getQuestionInfo(data.question_types, '목적')}</td>
+        <td>${getQuestionInfo(data.question_types, '부적절한')}</td>
+        <td>${getQuestionInfo(data.question_types, '알 수 없는 정보')}</td>
+        <td>${getQuestionInfo(data.question_types, '답할 수 없는 질문')}</td>
+        <td>${getQuestionInfo(data.question_format, 'multiple_choice')}</td>
+        <td>${getQuestionInfo(data.question_format, 'subjective')}</td>
+        <td>${getQuestionScopeInfo(data.question_scope, '범위_교과서')}</td>
+        <td>${getQuestionScopeInfo(data.question_scope, '범위_모의고사')}</td>
+        <td>${getQuestionScopeInfo(data.question_scope, '범위_부교재')}</td>
         <td>${data.total_characters || 0}</td>
         <td>${Array.isArray(data.highest_difficulty_vocab) ? data.highest_difficulty_vocab.join(', ') : ''}</td>
     `;
@@ -227,12 +230,15 @@ function downloadExcel() {
     const rows = table.getElementsByTagName('tr');
     const wb = XLSX.utils.book_new();
     
-    // 헤더 정의
+    // 헤더 정의 수정
     const headers = [
-        "학교명", "학년", "시험종류", "총문항수", "내용이해", "추론", "함의", 
-        "주제파악", "제목선택", "요지파악", "필자주장", "문단요약", "분위기/심경",
-        "목적파악", "빈칸추론", "연결어", "문장순서", "문장삽입", "문장삭제",
-        "어휘", "어법", "문장완성", "영작", "진위판별", "영영풀이", "불일치",
+        "학교명", "출판사", "학년", "시험종류", "총문항수",
+        "빈칸추론", "주제추론", "제목추론", "요지추론", "필자주장",
+        "밑줄어휘", "밑줄어법", "문단요약", "순서배열", "문장삽입",
+        "문장삭제", "영영풀이", "지문내용", "분위기/심경", "목적",
+        "부적절한", "알 수 없는 정보", "답할 수 없는 질문",
+        "객관식", "서술형",
+        "교과서 범위", "모의고사 범위", "부교재 범위",
         "총글자수", "어려운어휘"
     ];
 
@@ -251,37 +257,7 @@ function downloadExcel() {
     const ws = XLSX.utils.aoa_to_sheet(data);
     
     // 컬럼 너비 설정
-    const colWidths = [
-        {wch: 15},  // 학교명
-        {wch: 8},   // 학년
-        {wch: 12},  // 시험종류
-        {wch: 10},  // 총문항수
-        {wch: 15},  // 내용이해
-        {wch: 15},  // 추론
-        {wch: 15},  // 함의
-        {wch: 15},  // 주제파악
-        {wch: 15},  // 제목선택
-        {wch: 15},  // 요지파악
-        {wch: 15},  // 필자주장
-        {wch: 15},  // 문단요약
-        {wch: 15},  // 분위기/심경
-        {wch: 15},  // 목적파악
-        {wch: 15},  // 빈칸추론
-        {wch: 15},  // 연결어
-        {wch: 15},  // 문장순서
-        {wch: 15},  // 문장삽입
-        {wch: 15},  // 문장삭제
-        {wch: 15},  // 어휘
-        {wch: 15},  // 어법
-        {wch: 15},  // 문장완성
-        {wch: 15},  // 영작
-        {wch: 15},  // 진위판별
-        {wch: 15},  // 영영풀이
-        {wch: 15},  // 불일치
-        {wch: 10},  // 총글자수
-        {wch: 20}   // 어려운어휘
-    ];
-    
+    const colWidths = headers.map(header => ({wch: 15}));
     ws['!cols'] = colWidths;
 
     // 워크북에 시트 추가
@@ -292,4 +268,13 @@ function downloadExcel() {
 }
 
 // 다운로드 버튼 이벤트 리스너
-document.getElementById('downloadExcel').addEventListener('click', downloadExcel); 
+document.getElementById('downloadExcel').addEventListener('click', downloadExcel);
+
+// 범위 정보를 표시하기 위한 새로운 함수 추가
+function getQuestionScopeInfo(scope, type) {
+    if (!scope || !scope[type]) return '0';
+    const count = scope[type].count || 0;
+    const numbers = scope[type].numbers || [];
+    const chapters = scope[type].chapters || [];
+    return `${count} (${numbers.join(', ')}) [${chapters.join(', ')}]`;
+} 
