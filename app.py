@@ -41,21 +41,26 @@ async def analyze():
         file.save(filepath)
         
         try:
-            # 비동기로 분석 실행
-            result = await analyzer.analyze_exam(filepath)
+            # 타임아웃 설정과 함께 분석 실행
+            result = await asyncio.wait_for(
+                analyzer.analyze_exam(filepath),
+                timeout=app.config['TIMEOUT']
+            )
             
             # 임시 파일 삭제
-            os.remove(filepath)
+            if os.path.exists(filepath):
+                os.remove(filepath)
             
             return jsonify(result)
             
-        except Exception as e:
-            # 에러 발생 시 임시 파일 삭제 시도
-            try:
+        except asyncio.TimeoutError:
+            if os.path.exists(filepath):
                 os.remove(filepath)
-            except:
-                pass
-            raise e
+            return jsonify({'error': '분석 시간이 초과되었습니다.'}), 500
+        except Exception as e:
+            if os.path.exists(filepath):
+                os.remove(filepath)
+            return jsonify({'error': str(e)}), 500
             
     except Exception as e:
         return jsonify({'error': str(e)}), 500

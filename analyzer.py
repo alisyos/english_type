@@ -7,6 +7,7 @@ import time
 import logging
 import os
 import tiktoken
+import asyncio
 
 # 로깅 설정
 logging.basicConfig(level=logging.DEBUG)
@@ -46,7 +47,7 @@ class EnglishExamAnalyzer:
             logger.info(f"Run 시작됨: {run.id}")
             
             # 실행 완료 대기
-            timeout = 300
+            timeout = 300  # 5분
             start_time = time.time()
             
             while True:
@@ -63,7 +64,7 @@ class EnglishExamAnalyzer:
                 elif run.status in ['failed', 'expired', 'cancelled']:
                     raise Exception(f"Assistant 실행 실패: {run.status}")
                 
-                time.sleep(3)
+                await asyncio.sleep(3)  # 비동기 대기
             
             # 응답 가져오기
             messages = self.client.beta.threads.messages.list(
