@@ -4,6 +4,7 @@ import os
 from dotenv import load_dotenv
 from analyzer import EnglishExamAnalyzer
 import asyncio
+import gc  # 가비지 컬렉션 추가
 
 load_dotenv()
 
@@ -38,32 +39,46 @@ async def analyze():
         
         filename = secure_filename(file.filename)
         filepath = os.path.join(app.config['UPLOAD_FOLDER'], filename)
-        file.save(filepath)
         
         try:
+            # 파일 저장 전 메모리 정리
+            gc.collect()
+            
+            file.save(filepath)
+            
             # 타임아웃 설정과 함께 분석 실행
             result = await asyncio.wait_for(
                 analyzer.analyze_exam(filepath),
-                timeout=app.config['TIMEOUT']
+                timeout=600  # 10분으로 증가
             )
             
-            # 임시 파일 삭제
+            # 파일 삭제 및 메모리 정리
             if os.path.exists(filepath):
                 os.remove(filepath)
+            gc.collect()
             
             return jsonify(result)
             
         except asyncio.TimeoutError:
             if os.path.exists(filepath):
                 os.remove(filepath)
+            gc.collect()
             return jsonify({'error': '분석 시간이 초과되었습니다.'}), 500
         except Exception as e:
             if os.path.exists(filepath):
                 os.remove(filepath)
+            gc.collect()
             return jsonify({'error': str(e)}), 500
             
     except Exception as e:
+        gc.collect()
         return jsonify({'error': str(e)}), 500
+
+# 메모리 정리를 위한 엔드포인트 추가
+@app.route('/cleanup', methods=['POST'])
+def cleanup():
+    gc.collect()
+    return jsonify({'status': 'success'})
 
 if __name__ == '__main__':
     app.run(debug=True) 
