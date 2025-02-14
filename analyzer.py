@@ -81,13 +81,44 @@ class EnglishExamAnalyzer:
                 raise Exception("응답 메시지가 없습니다")
             
             response_content = messages.data[0].content[0].text.value
+            logger.info(f"Raw response: {response_content}")  # 디버깅용 로그 추가
             
             # 응답 파싱
-            if "```" in response_content:
-                response_content = re.sub(r'```(?:json)?(.*?)```', r'\1', response_content, flags=re.DOTALL)
-            response_content = response_content.strip()
-            
-            return json.loads(response_content)
+            try:
+                # JSON 블록 추출 시도
+                if "```json" in response_content:
+                    json_match = re.search(r'```json\s*(.*?)\s*```', response_content, re.DOTALL)
+                    if json_match:
+                        response_content = json_match.group(1)
+                elif "```" in response_content:
+                    json_match = re.search(r'```\s*(.*?)\s*```', response_content, re.DOTALL)
+                    if json_match:
+                        response_content = json_match.group(1)
+                
+                response_content = response_content.strip()
+                logger.info(f"Cleaned response: {response_content}")  # 디버깅용 로그 추가
+                
+                # JSON 파싱
+                try:
+                    return json.loads(response_content)
+                except json.JSONDecodeError as e:
+                    logger.error(f"JSON 파싱 실패: {str(e)}")
+                    # 기본 응답 구조 반환
+                    return {
+                        "school": "알 수 없음",
+                        "publisher": "알 수 없음",
+                        "grade": "알 수 없음",
+                        "exam_type": "알 수 없음",
+                        "total_questions": 0,
+                        "question_format": {},
+                        "question_scope": {},
+                        "question_types": {},
+                        "total_words": 0,
+                        "difficult_words": []
+                    }
+            except Exception as e:
+                logger.error(f"응답 처리 중 오류: {str(e)}")
+                raise
             
         except Exception as e:
             logger.error(f"Assistant 분석 중 오류: {str(e)}")
