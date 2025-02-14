@@ -100,7 +100,7 @@ class EnglishExamAnalyzer:
             logger.info(f"Run 시작됨: {run.id}")
             
             # 실행 완료 대기
-            timeout = 180  # 3분
+            timeout = 300  # 5분으로 증가
             start_time = time.time()
             
             while True:

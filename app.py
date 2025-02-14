@@ -9,6 +9,7 @@ load_dotenv()
 app = Flask(__name__)
 app.config['UPLOAD_FOLDER'] = 'uploads'
 app.config['MAX_CONTENT_LENGTH'] = 16 * 1024 * 1024  # 16MB max-limit
+app.config['TIMEOUT'] = 300
 
 api_key = os.getenv('OPENAI_API_KEY')
 analyzer = EnglishExamAnalyzer(api_key)
@@ -35,6 +36,29 @@ def analyze():
     
     try:
         result = analyzer.analyze_exam(filepath)
+        # 결과 검증
+        required_fields = [
+            'school_name', 'publisher', 'grade', 'exam_type', 'total_questions',
+            'question_types', 'question_format', 'question_scope',
+            'total_characters', 'highest_difficulty_vocab'
+        ]
+        
+        for field in required_fields:
+            if field not in result:
+                raise ValueError(f'필수 필드 {field}가 누락되었습니다.')
+        
+        # question_types 검증
+        question_type_fields = [
+            '빈칸추론', '주제추론', '제목추론', '요지추론', '필자주장',
+            '밑줄어휘', '밑줄어법', '문단요약', '순서배열', '문장삽입',
+            '문장삭제', '영영풀이', '지문내용', '분위기/심경', '목적',
+            '부적절한', '알 수 없는 정보', '답할 수 없는 질문'
+        ]
+        
+        for type_field in question_type_fields:
+            if type_field not in result['question_types']:
+                result['question_types'][type_field] = {'count': 0, 'numbers': []}
+        
         os.remove(filepath)  # 분석 후 파일 삭제
         return jsonify(result)
     except Exception as e:
